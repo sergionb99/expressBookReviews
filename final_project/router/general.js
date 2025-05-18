@@ -7,7 +7,12 @@ const public_users = express.Router();
 
 public_users.post("/register", (req,res) => {
   //Write your code here
-  return res.status(300).json({message: "Yet to be implemented"});
+  const username = req.body.username;
+  const password = req.body.password;
+  userExists = users.filter((user) => user.username === username);
+  if (userExists.length > 0) return res.status(404).json({message: "User already exists!"});
+  users.push({username:username, password:password})
+  return res.status(200).json({message: "Username created correctly"})
 });
 
 // Get the book list available in the shop
@@ -28,32 +33,39 @@ public_users.get('/author/:author',function (req, res) {
   //Write your code here
   const author = req.params.author;
   let booksAuthor = {};
-  const isbns = Object.keys(books);
-  isbns.forEach(isbn => {
-    let book = books[isbn];
-    if (book.author.toLowerCase() === author.toLowerCase()) {
-      booksAuthor[isbn] = book;
+  Object.entries(books).forEach(([key,book]) => {
+    if(book.author.toLowerCase() === author.toLowerCase()){
+        booksAuthor[key] = book;
     }
   });
-  return res.send(booksAuthor);
+  if (Object.keys(booksAuthor).length === 0) {
+    return res.status(404).send("This author doesn't have books");
+  }
+  return res.send(JSON.stringify(booksAuthor,null, 3));
 });
 
 // Get all books based on title
 public_users.get('/title/:title',function (req, res) {
   //Write your code here
   const title = req.params.title;
-  let booksAuthor = {};
+  let booksTitle = {};
   Object.entries(books).forEach(([key,book]) => {
-    if(book.author === author){
-        booksAuthor[key] = book;
+    if(book.title.toLowerCase() === title.toLowerCase()){
+        booksTitle[key] = book;
     }
   });
-  return res.send(booksAuthor);});
-
+  if (Object.keys(booksTitle).length === 0) {
+    return res.status(404).send("There is no book with this title");
+  }
+  return res.send(JSON.stringify(booksTitle,null, 3));
+});
 //  Get book review
 public_users.get('/review/:isbn',function (req, res) {
   //Write your code here
-  return res.status(300).json({message: "Yet to be implemented"});
+  const isbn = req.params.isbn;
+  const book = books[isbn];
+  if(!book) return res.status(404).send("There is no book with this isbn");
+  return res.send(book.reviews);
 });
 
 module.exports.general = public_users;
